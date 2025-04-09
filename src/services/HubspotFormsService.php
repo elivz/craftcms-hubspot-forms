@@ -75,7 +75,7 @@ class HubspotFormsService extends Component
     public function getPortalId( $token = null )
     {
 
-        return Craft::$app->cache->getOrSet( 'hubspot-forms::portal', function() {
+        return Craft::$app->cache->getOrSet( 'hubspot-forms::portal', function() use ( $toke ) {
         
             /* Send request */
             $request = $this->sendRequest( "https://api.hubapi.com/integrations/v1/me", $token );
