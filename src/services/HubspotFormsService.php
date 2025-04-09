@@ -30,7 +30,7 @@ class HubspotFormsService extends Component
 
                 /* Send request to HubSpot */
                 $request = $this->sendRequest( $link );
-                
+
                 /* Exit on failure */
                 if( is_null( $request ) || !$request->getStatusCode() == "200" )
                 {
@@ -53,10 +53,10 @@ class HubspotFormsService extends Component
                 {
                     break;
                 }
-                
+
                 /* Set API URL */
                 $link = $response->paging->next->link;
-                
+
             }
 
             /* Sort alphabetically */
@@ -66,7 +66,7 @@ class HubspotFormsService extends Component
             return $forms;
 
         }, 600 );
-        
+
     }
 
     /*
@@ -75,8 +75,8 @@ class HubspotFormsService extends Component
     public function getPortalId( $token = null )
     {
 
-        return Craft::$app->cache->getOrSet( 'hubspot-forms::portal', function() use ( $toke ) {
-        
+        return Craft::$app->cache->getOrSet( 'hubspot-forms::portal', function() use ( $token ) {
+
             /* Send request */
             $request = $this->sendRequest( "https://api.hubapi.com/integrations/v1/me", $token );
 
@@ -119,7 +119,7 @@ class HubspotFormsService extends Component
     private function sendRequest( $url, $token = null )
     {
         Craft::info("Sending request to " . $url);
-        
+
         try
         {
 
@@ -128,16 +128,16 @@ class HubspotFormsService extends Component
             {
                 $token = HubspotForms::getInstance()->settings->getHsToken();
             }
-            
+
             /* Create HTTP Client */
             $request = new Client();
-    
+
             /* Send request with token */
             return $request->get( $url, [ 'headers' => [
                 "Authorization" => "Bearer {$token}",
                 "Accept" => "application/json",
             ]]);
-            
+
         }
         catch( \Throwable $th )
         {
