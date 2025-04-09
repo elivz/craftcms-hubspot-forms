@@ -16,52 +16,56 @@ class HubspotFormsService extends Component
     public function getForms()
     {
 
-        /* Create forms array */
-        $forms = [];
+        return Craft::$app->cache->getOrSet( 'hubspot-forms::forms', function() {
 
-        /* Set API URL */
-        $limit = Craft::$app->plugins->getPlugin('hubspot-forms')->getSettings()->getHsLimit() ?? 100;
-        $link = "https://api.hubapi.com/marketing/v3/forms?limit={$limit}";
+            /* Create forms array */
+            $forms = [];
 
-        while( true )
-        {
-
-            /* Send request to HubSpot */
-            $request = $this->sendRequest( $link );
-            
-            /* Exit on failure */
-            if( is_null( $request ) || !$request->getStatusCode() == "200" )
-            {
-                break;
-            }
-
-            /* Decode response */
-            $response = json_decode( $request->getBody()->getContents() );
-
-            /* Loop forms from API request */
-            foreach( $response->results as $form )
-            {
-                /* Add form to forms array */
-                /* Key = name, Value = ID */
-                $forms[ $form->name ] = $form->id;
-            }
-
-            /* Check if there are more pages */
-            if( !property_exists( $response, 'paging' ) || !isset( $response->paging->next->link ) )
-            {
-                break;
-            }
-            
             /* Set API URL */
-            $link = $response->paging->next->link;
-            
-        }
+            $limit = Craft::$app->plugins->getPlugin('hubspot-forms')->getSettings()->getHsLimit() ?? 100;
+            $link = "https://api.hubapi.com/marketing/v3/forms?limit={$limit}";
 
-        /* Sort alphabetically */
-        ksort( $forms );
+            while( true )
+            {
 
-        /* Return forms array */
-        return $forms;
+                /* Send request to HubSpot */
+                $request = $this->sendRequest( $link );
+                
+                /* Exit on failure */
+                if( is_null( $request ) || !$request->getStatusCode() == "200" )
+                {
+                    break;
+                }
+
+                /* Decode response */
+                $response = json_decode( $request->getBody()->getContents() );
+
+                /* Loop forms from API request */
+                foreach( $response->results as $form )
+                {
+                    /* Add form to forms array */
+                    /* Key = name, Value = ID */
+                    $forms[ $form->name ] = $form->id;
+                }
+
+                /* Check if there are more pages */
+                if( !property_exists( $response, 'paging' ) || !isset( $response->paging->next->link ) )
+                {
+                    break;
+                }
+                
+                /* Set API URL */
+                $link = $response->paging->next->link;
+                
+            }
+
+            /* Sort alphabetically */
+            ksort( $forms );
+
+            /* Return forms array */
+            return $forms;
+
+        }, 600 );
         
     }
 
@@ -70,15 +74,19 @@ class HubspotFormsService extends Component
      */
     public function getPortalId( $token = null )
     {
+
+        return Craft::$app->cache->getOrSet( 'hubspot-forms::portal', function() {
         
-        /* Send request */
-        $request = $this->sendRequest( "https://api.hubapi.com/integrations/v1/me", $token );
+            /* Send request */
+            $request = $this->sendRequest( "https://api.hubapi.com/integrations/v1/me", $token );
 
-        /* Handle invalid response */
-        if( is_null( $request ) ){ return null; }
+            /* Handle invalid response */
+            if( is_null( $request ) ){ return null; }
 
-        /* Get portal id from response */
-        return json_decode( $request->getBody()->getContents() )->portalId ?? null;
+            /* Get portal id from response */
+            return json_decode( $request->getBody()->getContents() )->portalId ?? null;
+
+        }, 3600 );
 
     }
 
